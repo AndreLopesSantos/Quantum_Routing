@@ -110,7 +110,9 @@ def read_sol_file(G):
 G = nx.Graph()
 #G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
 G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
-write_lp_file(G,1)
-os.system('cmd /c "scip -c "read simple.lp optimize display solution write solution simple.sol quit""')
-read_sol_file(G)
+
+def runSCIP (G):
+    write_lp_file(G,1)
+    os.system('cmd /c "scip -c "read simple.lp optimize display solution write solution simple.sol quit""')
+    read_sol_file(G)
 

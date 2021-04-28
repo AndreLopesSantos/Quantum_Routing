@@ -5,11 +5,14 @@ from collections import defaultdict
 from dwave.system import DWaveSampler, EmbeddingComposite
 import sys
 import numpy as np
+import dwave.inspector
 
 G = nx.Graph()
 #lista = dnx.traveling_salesperson_qubo(G)
 #G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
 G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
+
+
 def traveling_salesman(G):
 
     Q = defaultdict(int)
@@ -25,7 +28,6 @@ def traveling_salesman(G):
 
     max_weight = 0
 
-    B = 1
     listofedges = []
     for i,j in G.edges:
         if G.get_edge_data(*(i,j))['weight'] > max_weight:
@@ -36,6 +38,7 @@ def traveling_salesman(G):
     print("listofedges: " + str(listofedges))
 
     A = num_nodes * max_weight
+    B = num_nodes * 3
     '''
     Ha = A sumi(1- sumj(Xij))^2 + A sumj(1-sumi(xij)) + A sumsumXujXij+1
 
@@ -50,15 +53,25 @@ def traveling_salesman(G):
     #(sum(xi)-4)^2) = Sum(xi^2) + 2 Sum sum xixj - 8sum(xi) +16
     # Since xi^2 = xi
     #-7sum(xi) + 2 sum sum xixj + 16
+
+    penalty =  5 * A
+    worsePenalty = 5 * A
     for i in range(num_nodes**2):
-        Q[(i,i)] += -1*A # -1 sum xi * A
+        Q[(i,i)] += -5*A # -1 sum xi * A
+        if i < num_nodes:
+            Q[(i,i)] = worsePenalty 
+        if i >= num_nodes and i % num_nodes == 0:
+            Q[(i,i)] = worsePenalty 
+            Q[(i-1,i-1)] = worsePenalty 
+        if i // num_nodes == num_nodes-1:
+            Q[(i,i)] = worsePenalty 
         for j in range(i+1,num_nodes**2):
             first_node = i // num_nodes
             second_node = j // num_nodes
             if first_node == second_node: #all instances of the same node
-                Q[(i,j)] += 2 * A
+                Q[(i,j)] += penalty 
             elif ((j-i) % num_nodes) == 0:
-                Q[(i,j)] += 2 * A
+                Q[(i,j)] += penalty 
                 if is_directed_graph== True:
                     if [first_node,second_node] in listofedges:
                         if j % num_nodes != 0:
@@ -73,11 +86,17 @@ def traveling_salesman(G):
                         else:
                             Q[(i+(num_nodes-1),j)] += G.get_edge_data(*(first_node,second_node))['weight'] * B
                             Q[(i,j+(num_nodes-1))] += G.get_edge_data(*(first_node,second_node))['weight'] * B
+    
+    
+    #First node is always the first one in the cycle
+    Q[(0,0)] = -penalty
+    
+    #Last node is always the last one in the cycle
+    Q[(i,j)] = -penalty
 
 
-
-
-
+    QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
+    inspector_on = False
 
 
 
@@ -94,51 +113,37 @@ def traveling_salesman(G):
     filename = "QuboMatrix.txt"
     f = open(filename, "w")
     for linha in testarray:
-        f.write(str(linha))
+        f.write(str(linha) + "\n")
 
-    '''
-    lista = nx.to_dict_of_lists(G)
-    lista2 = nx.to_edgelist(G)
-    print("Dict of lists")
-    print(lista)
-    print(lista[0])
-    print("edgelist")
-    print(lista2)
-    sampler = EmbeddingComposite(DWaveSampler())
-    lista = dnx.traveling_salesperson(G, sampler = sampler, start=0)
-    print(lista)
+    if QuantumRun == True:
+        sampler = EmbeddingComposite(DWaveSampler())
+        sampleset = sampler.sample_qubo(Q, num_reads=250, chain_strength=1000)
 
+        print(sampleset)
+        print(sampleset.record)
+        print(type(sampleset.record))
+        ResultFile = "DwaveResult.txt"
+        fi = open(ResultFile, "w")
+        fi.write(str(sampleset.record))
+        if inspector_on == True:
+            dwave.inspector.show(sampleset)
+        #Making the results easily readable
+        for line in range(10):
+            linestr = "LINE NUMBER:" + str(line)
+            print(linestr)
+            fi.write("\n" + linestr + "\n")
+            resultArray = sampleset.record[line][0]
+            for variavel in range(len(resultArray)):
+                if resultArray[variavel] == 1:
+                    xstr = "X" + str(variavel // num_nodes) + "_" + str((variavel % num_nodes) +1) + " = 1"
+                    print(xstr)
+                    fi.write(xstr + "\n")
 
-
-
-    Q = defaultdict(int)
-
-    # QUBO = min(sum(xi+xj-2xixj)) + lagrange*(sum(xi)-4)^2
-
-    #Constraint 
-    #(sum(xi)-4)^2) = Sum(xi^2) + 2 Sum sum xixj - 8sum(xi) +16
-    # Since xi^2 = xi
-    #-7sum(xi) + 2 sum sum xixj + 16
-    lagrange = 4
-    for i in range(8):
-        Q[(i,i)] += -7*lagrange # -7 sum xi
-        for j in range(i+1,8):
-            Q[(i,j)] += 2*lagrange # 2 sum sum xixj
-
-
-    #Objective
-    #min(sum(xi+xj-2xixj))
-    for i,j in G.edges:
-        Q[(i,i)] += 1 #xi
-        Q[(j,j)] += 1 #xj
-        Q[(i,j)] += -2 # -2xixj
-
-'''
-    sampler = EmbeddingComposite(DWaveSampler())
-    sampleset = sampler.sample_qubo(Q, num_reads=10, chain_strength=10)
-
-    print(sampleset)
+        print(resultArray)
+    
+   
     np.set_printoptions(threshold = False)
+
 
 
 traveling_salesman(G)
