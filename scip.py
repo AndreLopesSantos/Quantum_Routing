@@ -114,5 +114,6 @@ G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0
 def runSCIP (G):
     write_lp_file(G,1)
     os.system('cmd /c "scip -c "read simple.lp optimize display solution write solution simple.sol quit""')
-    read_sol_file(G)
+    results = read_sol_file(G)
+    return results
 

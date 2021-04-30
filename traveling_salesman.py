@@ -27,18 +27,28 @@ def traveling_salesman(G):
         is_directed_graph = False
 
     max_weight = 0
+    min_weight = 10000
 
     listofedges = []
     for i,j in G.edges:
         if G.get_edge_data(*(i,j))['weight'] > max_weight:
             max_weight = G.get_edge_data(*(i,j))['weight']
+        elif G.get_edge_data(*(i,j))['weight'] < min_weight:
+            min_weight = G.get_edge_data(*(i,j))['weight']
         listofedges.append([i,j])
         
     print("max_weight: " + str(max_weight))
     print("listofedges: " + str(listofedges))
 
-    A = num_nodes * max_weight
-    B = num_nodes * 3
+    
+    B = num_nodes * min_weight
+    A = num_nodes * max_weight * 6
+    
+    '''
+    B = 1
+    A = num_nodes * max_weight 
+    '''
+    bias = A
     '''
     Ha = A sumi(1- sumj(Xij))^2 + A sumj(1-sumi(xij)) + A sumsumXujXij+1
 
@@ -54,24 +64,24 @@ def traveling_salesman(G):
     # Since xi^2 = xi
     #-7sum(xi) + 2 sum sum xixj + 16
 
-    penalty =  5 * A
-    worsePenalty = 5 * A
+    #penalty = 3 * A
+    #worsePenalty = 5 * A
     for i in range(num_nodes**2):
-        Q[(i,i)] += -5*A # -1 sum xi * A
-        if i < num_nodes:
-            Q[(i,i)] = worsePenalty 
-        if i >= num_nodes and i % num_nodes == 0:
-            Q[(i,i)] = worsePenalty 
-            Q[(i-1,i-1)] = worsePenalty 
-        if i // num_nodes == num_nodes-1:
-            Q[(i,i)] = worsePenalty 
+        Q[(i,i)] += -A
+        if i < num_nodes: #Stops the first node from being in any place than first
+            Q[(i,i)] = 2 * A
+        if i >= num_nodes and i % num_nodes == 0: #Stops the intermediate nodes from being the first or the last
+            Q[(i,i)] =  2 * A
+            Q[(i-1,i-1)] = 2 * A 
+        if i // num_nodes == num_nodes-1: #Stops the last node from being any node other than last
+            Q[(i,i)] = 2 * A 
         for j in range(i+1,num_nodes**2):
             first_node = i // num_nodes
             second_node = j // num_nodes
             if first_node == second_node: #all instances of the same node
-                Q[(i,j)] += penalty 
+                Q[(i,j)] += 2 * A 
             elif ((j-i) % num_nodes) == 0:
-                Q[(i,j)] += penalty 
+                Q[(i,j)] += 2 * A 
                 if is_directed_graph== True:
                     if [first_node,second_node] in listofedges:
                         if j % num_nodes != 0:
@@ -89,14 +99,15 @@ def traveling_salesman(G):
     
     
     #First node is always the first one in the cycle
-    Q[(0,0)] = -penalty
+    Q[(0,0)] = -bias
     
     #Last node is always the last one in the cycle
-    Q[(i,j)] = -penalty
+    Q[(i,j)] = -bias
 
 
     QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
-    inspector_on = False
+    inspector_on = True
+
 
 
 
@@ -113,15 +124,15 @@ def traveling_salesman(G):
     filename = "QuboMatrix.txt"
     f = open(filename, "w")
     for linha in testarray:
-        f.write(str(linha) + "\n")
+        for elemento in linha:
+            f.write(str(elemento) + " , ")
+        f.write("\n")
 
     if QuantumRun == True:
         sampler = EmbeddingComposite(DWaveSampler())
-        sampleset = sampler.sample_qubo(Q, num_reads=250, chain_strength=1000)
+        sampleset = sampler.sample_qubo(Q, num_reads=500, chain_strength=1000)
 
         print(sampleset)
-        print(sampleset.record)
-        print(type(sampleset.record))
         ResultFile = "DwaveResult.txt"
         fi = open(ResultFile, "w")
         fi.write(str(sampleset.record))
@@ -139,11 +150,11 @@ def traveling_salesman(G):
                     print(xstr)
                     fi.write(xstr + "\n")
 
-        print(resultArray)
+        bestResult = sampleset.record[0][0]
+        print(bestResult)
     
-   
+    print("A: ", A)
+    print("B: ", B)
     np.set_printoptions(threshold = False)
+    return bestResult
 
-
-
-traveling_salesman(G)
