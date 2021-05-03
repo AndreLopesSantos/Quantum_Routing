@@ -6,12 +6,43 @@ from dwave.system import DWaveSampler, EmbeddingComposite
 import sys
 import numpy as np
 import dwave.inspector
+import math
+import random
 
-G = nx.Graph()
+#G = nx.Graph()
 #lista = dnx.traveling_salesperson_qubo(G)
 #G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
-G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
+#G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
 
+
+#resultado_teste = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1])
+
+
+
+
+   
+#print(G.edges())
+
+
+def valid_solution(result):
+    node_list = []
+    position_list = []
+    num_nodes = math.sqrt(len(result))
+    for numero in range(len(result)):
+                if result[numero] == 1:
+                    num_no = numero // num_nodes
+                    num_pos = (numero % num_nodes) +1
+                    if num_no in node_list or  num_pos in position_list:
+                        return False
+                    else:
+                        node_list.append(num_no)
+                        position_list.append(num_pos)
+    if len(node_list) != num_nodes or len(position_list) != num_nodes:
+        return False
+    
+    return True
+
+#valid_solution(resultado_teste)
 
 def traveling_salesman(G):
 
@@ -20,6 +51,7 @@ def traveling_salesman(G):
 
     num_nodes = G.number_of_nodes()
     num_edges = G.number_of_edges()
+    reads = 500
 
     if isinstance(G, nx.classes.digraph.DiGraph):
         is_directed_graph = True
@@ -108,6 +140,7 @@ def traveling_salesman(G):
     QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
     inspector_on = True
 
+    chain = int((A * 5) // 1000 * 1000)
 
 
 
@@ -130,7 +163,7 @@ def traveling_salesman(G):
 
     if QuantumRun == True:
         sampler = EmbeddingComposite(DWaveSampler())
-        sampleset = sampler.sample_qubo(Q, num_reads=500, chain_strength=1000)
+        sampleset = sampler.sample_qubo(Q, num_reads=reads, chain_strength=3000)
 
         print(sampleset)
         ResultFile = "DwaveResult.txt"
@@ -150,11 +183,39 @@ def traveling_salesman(G):
                     print(xstr)
                     fi.write(xstr + "\n")
 
-        bestResult = sampleset.record[0][0]
-        print(bestResult)
-    
-    print("A: ", A)
-    print("B: ", B)
-    np.set_printoptions(threshold = False)
-    return bestResult
+        resultfound = False
+        for results_iterator in range(reads):
+            if valid_solution(sampleset.record[results_iterator][0]):
+                resultlinestr = "Result Line: " + str(results_iterator)
+                print(resultlinestr)
+                bestResult = sampleset.record[results_iterator][0]
+                resultfound = True
+                break
 
+
+
+    if resultfound:    
+        print(bestResult)
+        print("A: ", A)
+        print("B: ", B)
+        print("Chain: ",chain)
+        np.set_printoptions(threshold = False)
+        return bestResult
+    else:
+        print("A: ", A)
+        print("B: ", B)
+        print("Chain: ",chain) 
+        print("No Valid Result was found")
+        np.set_printoptions(threshold = False)
+        return 0
+
+
+def complete_graph_generator(number_of_nodes):
+    G = nx.complete_graph(number_of_nodes)
+    for i,j in G.edges:
+        G[i][j]['weight'] = random.randint(1,20)
+
+    return G
+
+G = complete_graph_generator(9)
+traveling_salesman(G)
