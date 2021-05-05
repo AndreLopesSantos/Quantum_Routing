@@ -20,9 +20,9 @@ def complete_graph_generator(number_of_nodes):
 def statistical_test_quantum(G, repetitions):
     
     num_equal_results = 0
+    scipResult = runSCIP(G)
+    scipResult.pop(0)
     for a in range(repetitions):
-        scipResult = runSCIP(G)
-        scipResult.pop(0)
 
         quantumResult = traveling_salesman(G).tolist()
         print(scipResult)
@@ -45,5 +45,5 @@ def statistical_test_quantum(G, repetitions):
     print("The number of equal results between quantum and classic: " + str(num_equal_results) + "/" + str(repetitions))
 
 
-G = complete_graph_generator(7)
-statistical_test_quantum(G,1)
+G = complete_graph_generator(6)
+statistical_test_quantum(G,10)

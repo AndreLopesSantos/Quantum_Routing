@@ -15,7 +15,7 @@ import random
 #G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
 
 
-#resultado_teste = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1])
+resultado_teste = np.array([1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0])
 
 
 
@@ -37,12 +37,11 @@ def valid_solution(result):
                     else:
                         node_list.append(num_no)
                         position_list.append(num_pos)
-    if len(node_list) != num_nodes or len(position_list) != num_nodes:
+    if len(node_list) != num_nodes or len(position_list) != num_nodes or result[0] != 1 or result[len(result)-1] != 1:
         return False
     
     return True
 
-#valid_solution(resultado_teste)
 
 def traveling_salesman(G):
 
@@ -75,6 +74,11 @@ def traveling_salesman(G):
     
     B = num_nodes * min_weight
     A = num_nodes * max_weight * 6
+
+    QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
+    inspector_on = True
+
+    chain = int((A * 5) // 1000 * 1000)
     
     '''
     B = 1
@@ -137,10 +141,7 @@ def traveling_salesman(G):
     Q[(i,j)] = -bias
 
 
-    QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
-    inspector_on = True
-
-    chain = int((A * 5) // 1000 * 1000)
+   
 
 
 
@@ -163,7 +164,7 @@ def traveling_salesman(G):
 
     if QuantumRun == True:
         sampler = EmbeddingComposite(DWaveSampler())
-        sampleset = sampler.sample_qubo(Q, num_reads=reads, chain_strength=3000)
+        sampleset = sampler.sample_qubo(Q, num_reads=reads, chain_strength=chain)
 
         print(sampleset)
         ResultFile = "DwaveResult.txt"
@@ -184,7 +185,7 @@ def traveling_salesman(G):
                     fi.write(xstr + "\n")
 
         resultfound = False
-        for results_iterator in range(reads):
+        for results_iterator in range(len(sampleset.record)):
             if valid_solution(sampleset.record[results_iterator][0]):
                 resultlinestr = "Result Line: " + str(results_iterator)
                 print(resultlinestr)
@@ -207,7 +208,7 @@ def traveling_salesman(G):
         print("Chain: ",chain) 
         print("No Valid Result was found")
         np.set_printoptions(threshold = False)
-        return 0
+        return np.zeros(num_nodes**2)
 
 
 def complete_graph_generator(number_of_nodes):
@@ -217,5 +218,5 @@ def complete_graph_generator(number_of_nodes):
 
     return G
 
-G = complete_graph_generator(9)
-traveling_salesman(G)
+#G = complete_graph_generator(9)
+#traveling_salesman(G)
