@@ -43,7 +43,7 @@ def valid_solution(result):
     return True
 
 
-def traveling_salesman(G):
+def traveling_salesman(G, inspector = False):
 
     Q = defaultdict(int)
 
@@ -76,7 +76,7 @@ def traveling_salesman(G):
     A = num_nodes * max_weight * 6
 
     QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
-    inspector_on = True
+    inspector_on = inspector
 
     chain = int((A * 5) // 1000 * 1000)
     
