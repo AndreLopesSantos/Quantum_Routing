@@ -8,6 +8,11 @@ import numpy as np
 import dwave.inspector
 import math
 import random
+from dwave_qbsolv import QBSolv
+from dwave.system.samplers import DWaveSampler
+from dwave.system.composites import FixedEmbeddingComposite
+import minorminer
+import itertools
 
 #G = nx.Graph()
 #lista = dnx.traveling_salesperson_qubo(G)
@@ -42,6 +47,28 @@ def valid_solution(result):
     
     return True
 
+def objective_function_result(G, result):
+    num_nodes = G.number_of_nodes()
+    sorted_nodes = np.zeros(G.number_of_nodes())
+    resultado_final = 0
+    if valid_solution(result):
+        for numero in range(len(result)):
+                if result[numero] == 1:
+                    num_no = numero // num_nodes
+                    num_pos = (numero % num_nodes) +1
+                    sorted_nodes[num_pos-1] = num_no
+    else:
+        return 0
+    
+    for no in range(len(sorted_nodes)-1):
+        i = sorted_nodes[no]
+        j = sorted_nodes[no+1]
+        resultado_final += G.get_edge_data(*(i,j))['weight']
+
+    
+    
+    return resultado_final
+
 
 def traveling_salesman(G, inspector = False):
 
@@ -75,7 +102,7 @@ def traveling_salesman(G, inspector = False):
     B = num_nodes * min_weight
     A = num_nodes * max_weight * 6
 
-    QuantumRun = True #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
+    QuantumRun = False #Temporary value for wether to run on the quantum computer or not (instead of commenting/uncommenting code)
     inspector_on = inspector
 
     chain = int((A * 5) // 1000 * 1000)
@@ -144,7 +171,7 @@ def traveling_salesman(G, inspector = False):
    
 
 
-
+    minimumResult = 100000
 
 
     np.set_printoptions(threshold=sys.maxsize)
@@ -153,7 +180,6 @@ def traveling_salesman(G, inspector = False):
     for alp in Q:
         testarray[alp]=Q[alp]
 
-    print(testarray)
 
     filename = "QuboMatrix.txt"
     f = open(filename, "w")
@@ -161,6 +187,25 @@ def traveling_salesman(G, inspector = False):
         for elemento in linha:
             f.write(str(elemento) + " , ")
         f.write("\n")
+    f.close()
+
+    solver_limit = 3
+    qubo_size = 5
+
+    newG = nx.complete_graph(solver_limit)
+    Qtest = {t: random.uniform(-1, 1) for t in itertools.product(range(qubo_size), repeat=2)}
+    system = DWaveSampler()
+    embedding = minorminer.find_embedding(newG.edges, system.edgelist)
+    response = QBSolv().sample_qubo(Q, solver=FixedEmbeddingComposite(system, embedding), solver_limit=solver_limit)
+
+    print("Q=" + str(Qtest))
+    print("Embedding = " , str(embedding))
+    print("samples=" + str(response.samples))
+    print("energies=" + str(list(response.data_vectors['energy'])))
+    print(str(response.record[0][0]))
+    return response.record[0][0]
+
+    resultfound = False
 
     if QuantumRun == True:
         sampler = EmbeddingComposite(DWaveSampler())
@@ -184,15 +229,14 @@ def traveling_salesman(G, inspector = False):
                     print(xstr)
                     fi.write(xstr + "\n")
 
-        resultfound = False
+        
         for results_iterator in range(len(sampleset.record)):
             if valid_solution(sampleset.record[results_iterator][0]):
-                resultlinestr = "Result Line: " + str(results_iterator)
-                print(resultlinestr)
-                bestResult = sampleset.record[results_iterator][0]
+                tempResult = objective_function_result(G,sampleset.record[results_iterator][0])
                 resultfound = True
-                break
-
+                if tempResult < minimumResult:
+                    minimumResult = tempResult
+                    bestResult = sampleset.record[results_iterator][0]
 
 
     if resultfound:    
@@ -218,5 +262,5 @@ def complete_graph_generator(number_of_nodes):
 
     return G
 
-#G = complete_graph_generator(9)
-#traveling_salesman(G)
+G = complete_graph_generator(5)
+traveling_salesman(G)

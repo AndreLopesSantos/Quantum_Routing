@@ -1,6 +1,7 @@
 from scip import runSCIP
 from traveling_salesman import traveling_salesman
 from traveling_salesman import valid_solution
+from traveling_salesman import objective_function_result
 import networkx  as nx
 import random 
 import numpy as np
@@ -17,29 +18,6 @@ def complete_graph_generator(number_of_nodes):
         G[i][j]['weight'] = random.randint(1,20)
 
     return G
-
-def objective_function_result(G, result):
-    num_nodes = G.number_of_nodes()
-    sorted_nodes = np.zeros(G.number_of_nodes())
-    resultado_final = 0
-    if valid_solution(result):
-        for numero in range(len(result)):
-                if result[numero] == 1:
-                    num_no = numero // num_nodes
-                    num_pos = (numero % num_nodes) +1
-                    sorted_nodes[num_pos-1] = num_no
-    else:
-        return 0
-    
-    for no in range(len(sorted_nodes)-1):
-        i = sorted_nodes[no]
-        j = sorted_nodes[no+1]
-        resultado_final += G.get_edge_data(*(i,j))['weight']
-
-    
-    
-    return resultado_final
-
 
                 
 
@@ -78,4 +56,4 @@ def statistical_test_quantum(G, repetitions, inspector = False):
 
 
 G = complete_graph_generator(9)
-statistical_test_quantum(G,1,True)
+statistical_test_quantum(G,1,False)

@@ -11,6 +11,7 @@ The Quantum computer used is the one provided by [Dwave](https://www.dwavesys.co
 To run this code, first of all you need to create a virtual enviroment using Python 3:
 
 ''' 
+
 python -m venv ocean
 
 '''
