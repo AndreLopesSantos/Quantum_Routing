@@ -4,11 +4,11 @@ import re
 from datetime import datetime
 
 
-def write_lp_file(G,B_value):
+def write_lp_file(G,B_value,minimize = True):
     num_nodes = G.number_of_nodes()
     num_variables = num_nodes **2
 
-    #Writing the objective function
+    #Writing the objective function to a string variable
     objective=" obj: "
     for i,j in G.edges:
         weight = G.get_edge_data(*(i,j))['weight']
@@ -24,7 +24,7 @@ def write_lp_file(G,B_value):
     objective = objective[:-3]
     objective += "\n"
 
-    #Writing constraints
+    #Writing constraints to a string variable
     constraint = 1
     constraint_str = ""
     for a in range(num_nodes):
@@ -50,7 +50,7 @@ def write_lp_file(G,B_value):
     constraint += 1
     constraint_str += " c" + str(constraint) + ": "  + "x" + str(num_nodes-1) + "_" + str(num_nodes) + " = 1\n"
 
-    #Binary Variables
+    # Writes Binary Variables to a string variable
     binstr = ""
     for k in range(num_nodes):
         for h in range(num_nodes):
@@ -62,9 +62,17 @@ def write_lp_file(G,B_value):
     #now = datetime.now()
     #date_string = now.strftime("%d-%m-%Y_%H-%M-%S")
     #filename = "nodes_"+str(num_nodes)+"_date_"+date_string+".lp"
-    filename = "simple.lp"
+    
+    #Create a file and write to it.
+    if minimize == True:
+        filename = "simple.lp"
+    else:
+        filename = "simple_max.lp"
     f = open(filename, "w")
-    f.write("Minimize\n")
+    if minimize == True:
+        f.write("Minimize\n")
+    else:
+        f.write("Maximize\n")
     f.write(objective)
     f.write("Subject To\n")
     f.write(constraint_str) #dependendo do número de nós será algo do tipo x11 + x12 + x13 + x14 = 1 e x21 + x22 + x23 + x24 = 1 , etc.)
@@ -74,9 +82,12 @@ def write_lp_file(G,B_value):
     f.close()
 
 
-def read_sol_file(G):
+def read_sol_file(G, minimize = True):
     print("READING SOLUTION FILE")
-    filename = "simple.sol"
+    if minimize == True:
+        filename = "simple.sol"
+    else:
+        filename = "simple_max.sol"
     f = open(filename, "r")
     number_of_nodes = G.number_of_nodes()
     resultados = [0] * ((number_of_nodes**2) + 1)
@@ -99,21 +110,16 @@ def read_sol_file(G):
     return resultados        
 
 
-    
-    #f.readline()
-    #linha = f.readline()
-    
-    #objective_value = float(re.findall("\d+\.\d*",linha)[0])
-    #linha = f.readline
-    #print(objective_value)
+def runSCIP (G, maximize = False):
+    if maximize == True:
+        write_lp_file(G,1,False)
+        os.system('cmd /c "scip -c "read simple_max.lp optimize display solution write solution "simple_max.sol" quit""')
+        results_max = read_sol_file(G, False)
+        return results_max
+    else:
+        write_lp_file(G,1)
+        os.system('cmd /c "scip -c "read simple.lp optimize display solution write solution simple.sol quit""')
+        results = read_sol_file(G)
+        return results
 
-G = nx.Graph()
-#G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
-G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
-
-def runSCIP (G):
-    write_lp_file(G,1)
-    os.system('cmd /c "scip -c "read simple.lp optimize display solution write solution simple.sol quit""')
-    results = read_sol_file(G)
-    return results
 

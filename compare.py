@@ -1,26 +1,10 @@
 from scip import runSCIP
+from auxiliary import complete_graph_generator
+from auxiliary import valid_solution
+from auxiliary import objective_function_result
 from traveling_salesman import traveling_salesman
-from traveling_salesman import valid_solution
-from traveling_salesman import objective_function_result
-import networkx  as nx
-import random 
-import numpy as np
-
-
-#G = nx.Graph()
-#G.add_weighted_edges_from({(0,1,20.0),(0,2,19.0),(1,2,2.0),(1,3, 2.0),(2,3, 15.0),(3,4, 16.0),(4,5, 19.0),(5,0,14.0),(2,5, 12.0),(0,3,13.0),(0,4, 2.0), (1,4,12.0), (1,5,11.0), (2,4,2.0),(3,5,2.0)})
-#G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
-
-
-def complete_graph_generator(number_of_nodes):
-    G = nx.complete_graph(number_of_nodes)
-    for i,j in G.edges:
-        G[i][j]['weight'] = random.randint(1,20)
-
-    return G
-
-                
-
+import os
+import time
 
 def statistical_test_quantum(G, repetitions, inspector = False):
     
@@ -54,6 +38,54 @@ def statistical_test_quantum(G, repetitions, inspector = False):
     print("Non optimal results from quantum computing (results of 0 are invalid): ")
     print(non_optimal_quantum_results)
 
+    
 
-G = complete_graph_generator(9)
-statistical_test_quantum(G,1,False)
+
+def quantum_experiment(G):
+    
+    #SCIP solver - Best Result Possible
+    scipBest_start = time.time()
+    scipBest = runSCIP(G, False)
+    scipBest_end = time.time()
+    scipBest_time = scipBest_end - scipBest_start
+    optimal_result_classic = scipBest.pop(0)
+
+    #SCIP solver - Worst Result Possible
+    scipWorst_start = time.time()
+    scipWorst = runSCIP(G, True)
+    scipWorst_end = time.time()
+    scipWorst_time = scipWorst_end - scipWorst_start
+    worst_result_classic  = scipWorst.pop(0)
+    
+    #Qbsolv - classical implementation
+    qbSolvResult_classic_start = time.time()
+    qbSolvResult_classic = traveling_salesman(G,False,True).tolist()
+    qbSolvResult_classic_end = time.time()
+    qbSolvResult_classic_time = qbSolvResult_classic_end - qbSolvResult_classic_start
+    objfunc_classic = objective_function_result(G,qbSolvResult_classic)
+    
+    #QBsolv - Quantum implementation
+    qbSolvResult_quantum_start = time.time()
+    qbSolvResult_quantum = traveling_salesman(G,False,False).tolist()
+    qbSolvResult_quantum_end = time.time()
+    qbSolvResult_quantum_time = qbSolvResult_quantum_end - qbSolvResult_quantum_start
+    objfunc_quantum = objective_function_result(G,qbSolvResult_quantum)
+    
+    #Write data to results file
+    filename = "results.csv"
+    num_nodes = G.number_of_nodes()
+    if os.path.exists(filename):
+        resultsFile = open(filename,"a")
+        exp_number = sum(1 for line in open('results.csv'))
+    else:
+        resultsFile = open(filename,"w")
+        resultsFile.write("Experiment, Number of Nodes, SCIP best, SCIP worst, QBSolv classic, QBsolv Quantum, SCIP best time, SCIP worst time, QB classic time, QB quantum time\n")
+        exp_number = 1
+
+    resultsLine = str(exp_number) + ","  + str(num_nodes) + "," + str(optimal_result_classic) + "," + str(worst_result_classic ) + "," + str(objfunc_classic) + "," + str(objfunc_quantum) + "," + str(scipBest_time) + "," + str(scipWorst_time) + "," + str(qbSolvResult_classic_time) + "," + str(qbSolvResult_quantum_time) + "\n"
+    resultsFile.write(resultsLine)
+
+
+G = complete_graph_generator(15)
+quantum_experiment(G)
+#statistical_test_quantum(G,1,False)
