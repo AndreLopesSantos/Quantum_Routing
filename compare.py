@@ -38,7 +38,6 @@ def statistical_test_quantum(G, repetitions, inspector = False):
     print("Non optimal results from quantum computing (results of 0 are invalid): ")
     print(non_optimal_quantum_results)
 
-    
 
 
 def quantum_experiment(G):

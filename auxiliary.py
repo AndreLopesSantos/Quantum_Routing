@@ -1,7 +1,8 @@
 import numpy as np
 import networkx  as nx
 import random
-import math 
+import math
+import re
 
 
 def complete_graph_generator(number_of_nodes):
@@ -51,3 +52,32 @@ def objective_function_result(G, result):
     
     
     return resultado_final
+
+
+def random_route(G,total_tsp):
+    total_weight = 0
+    num_edges = G.number_of_edges()
+    num_nodes = G.number_of_nodes()
+    for i,j in G.edges:
+        total_weight += G.get_edge_data(*(i,j))['weight']
+        average_weight = total_weight/num_edges
+    if total_tsp == True:
+        route_total = average_weight * num_nodes
+    else:
+        route_total = average_weight * (num_nodes-1)
+    print(route_total)
+    return route_total
+
+def read_solutions():
+    filename= "tsp_solutions.txt"
+    f = open(filename, "r")
+    num_linha = 0
+    for linha in f:
+        value = re.findall("\w+",linha)
+        print(value)
+
+    
+#G = nx.Graph()
+#G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
+#random_route(G,  True)
+read_solutions()
