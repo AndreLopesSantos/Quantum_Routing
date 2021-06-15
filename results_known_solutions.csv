@@ -1,0 +1,2 @@
+Experiment, Sample, Type,  Number of Nodes, Best Know Solution, Random route Solution, QBSolv classic, QBSolv classic full TSP, QBsolv Quantum, QBSolv classic full TSP, QB classic time, QB quantum time (general), QB Quantum Time (QPU), Problems
+1,burma14,TSP,14,3323,6672.153846153846,3239,3637,3395,3793,4.726599216461182,383.6321096420288,8.15,500

@@ -31,9 +31,9 @@ def valid_solution(result):
     
     return True
 
-def objective_function_result(G, result):
+def objective_function_result(G,result):
     num_nodes = G.number_of_nodes()
-    sorted_nodes = np.zeros(G.number_of_nodes())
+    sorted_nodes = np.zeros(num_nodes)
     resultado_final = 0
     if valid_solution(result):
         for numero in range(len(result)):
@@ -53,8 +53,18 @@ def objective_function_result(G, result):
     
     return resultado_final
 
+def best_result(G,response):
+    best_result = float('inf')
+    best_solution =  response.record[0][0]
+    for i in range(len(response)):
+        result = objective_function_result(G, response.record[i][0])
+        if result < best_result and result != 0:
+            best_solution = response.record[i][0]
+            best_result = result
+    return best_result
 
-def random_route(G,total_tsp):
+
+def random_route(G,total_tsp = True):
     total_weight = 0
     num_edges = G.number_of_edges()
     num_nodes = G.number_of_nodes()
@@ -65,19 +75,19 @@ def random_route(G,total_tsp):
         route_total = average_weight * num_nodes
     else:
         route_total = average_weight * (num_nodes-1)
-    print(route_total)
     return route_total
 
 def read_solutions():
     filename= "tsp_solutions.txt"
     f = open(filename, "r")
-    num_linha = 0
-    for linha in f:
-        value = re.findall("\w+",linha)
-        print(value)
+    solutions = dict()
+    for line in f:
+        value = re.findall("\w+",line)
+        solutions[value[0]] = value[1]
+    return solutions
 
-    
+  
 #G = nx.Graph()
 #G.add_weighted_edges_from({(0,1,7.0),(0,2,9.0),(1,2,10.0),(1,3, 15.0),(2,3, 11.0),(3,4, 6.0),(4,5, 9.0),(5,0,14.0),(2,5, 2.0),(0,3,3.0),(0,4, 5.0), (1,4,2.0), (1,5,1.0), (2,4,2.0),(3,5,6.0)})
 #random_route(G,  True)
-read_solutions()
+#read_solutions()
