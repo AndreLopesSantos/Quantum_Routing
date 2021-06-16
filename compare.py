@@ -140,7 +140,7 @@ def quantum_experiment_know_solutions(graphfile):
         exp_number = sum(1 for line in open('results_known_solutions.csv'))
     else:
         resultsFile = open(filename,"w")
-        resultsFile.write("Experiment, Sample, Type,  Number of Nodes, Best Know Solution, Random route Solution, QBSolv classic, QBSolv classic full TSP, QBsolv Quantum, QBSolv classic full TSP, QB classic time, QB quantum time (general), QB Quantum Time (QPU), Problems\n")
+        resultsFile.write("Experiment, Sample, Type,  Number of Nodes, Best Know Solution, Random route Solution, QBSolv classic, QBSolv classic full TSP, QBsolv Quantum, QBSolv Quantum full TSP, QB classic time, QB Quantum time (general), QB Quantum Time (QPU), Problems\n")
         exp_number = 1
 
     resultsLine = str(exp_number) + ","  + sample_str + "," + route_type + "," + str(num_nodes) + "," + best_known_result + "," + str(random_route_result) + "," + str(objfunc_classic) + "," + str(fulltsp_classic) + "," + str(objfunc_quantum) + "," + str(fulltsp_quantum) + ","+ str(qbSolvResult_classic_time) + "," + str(qbSolvResult_quantum_time) + "\n"
