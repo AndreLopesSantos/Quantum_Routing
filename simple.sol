@@ -1,18 +1,8 @@
 solution status: optimal solution found
-objective value:                                   34
+objective value:                                   20
 x0_1                                                1 	(obj:0)
-x1_9                                                1 	(obj:0)
+x1_4                                                1 	(obj:0)
 x2_3                                                1 	(obj:0)
-x3_11                                               1 	(obj:0)
-x4_6                                                1 	(obj:0)
-x5_8                                                1 	(obj:0)
-x6_7                                                1 	(obj:0)
-x7_2                                                1 	(obj:0)
-x8_12                                               1 	(obj:0)
-x9_5                                                1 	(obj:0)
-x10_10                                              1 	(obj:0)
-x11_14                                              1 	(obj:0)
-x12_13                                              1 	(obj:0)
-x13_4                                               1 	(obj:0)
-x14_15                                              1 	(obj:0)
-quadobjvar                                         34 	(obj:1)
+x3_2                                                1 	(obj:0)
+x4_5                                                1 	(obj:0)
+quadobjvar                                         20 	(obj:1)

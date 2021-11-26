@@ -1,4 +1,5 @@
 from scip import runSCIP
+from scip import write_lp_file
 import networkx as nx
 from auxiliary import complete_graph_generator
 from auxiliary import valid_solution
@@ -221,8 +222,12 @@ def classical_repeated_experiment(graphfile, repetitions):
         resultsFile.write(resultsLine)
 
 
+#G = extract_graph("graphs/symmetric/ulysses22.tsp")
+#write_lp_file(G, 1)
+os.system('cmd /c "scip -c "read simple.lp optimize display solution write solution simple.sol quit""')
+
 #G = extract_graph("graphs/symmetric/burma14.tsp")
 # quantum_experiment(G)
 # statistical_test_quantum(G,1,False)
-quantum_experiment_know_solutions("graphs/symmetric/burma14.tsp")
+# quantum_experiment_know_solutions("graphs/symmetric/burma14.tsp")
 #classical_repeated_experiment("graphs/symmetric/bayg29.tsp", 100)
