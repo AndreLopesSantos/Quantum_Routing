@@ -82,21 +82,29 @@ def list_to_graph(graphlist, graphtype, calculation, dimension):
     if graphtype == " TSP\n":
         G = nx.Graph()
 
-    if calculation == " EXPLICIT\n":
-        flat_graph_list = [item for sublist in graphlist for item in sublist]
+    flat_graph_list = [item for sublist in graphlist for item in sublist]
+
+    for a in flat_graph_list:
+        if a == "0":
+            flat_graph_list.remove(a)
+
+    print("length: ", len(flat_graph_list))
+    print(flat_graph_list)
+    if calculation == " EXPLICIT\n" and dimension == 21:
         counter = 0
-        for i in range(dimension):
-            for j in range(i+1, dimension):
-                if counter < len(graphlist):
-                    while True:
-                        weight_value = int(flat_graph_list[counter])
-                        if weight_value != 0:
-                            break
-                        else:
-                            counter += 1
-                    G.add_weighted_edges_from(
-                        {(j, i, weight_value)})
-                    counter += 1
+        for i in range(1, dimension):
+            for j in range(0, i):
+                G.add_weighted_edges_from(
+                    {(j, i, int(flat_graph_list[counter]))})
+                counter += 1
+
+    elif calculation == " EXPLICIT\n" and dimension != 21:
+        counter = 0
+        for i in range(len(graphlist)):
+            for j in range(i+1, len(graphlist)+1):
+                G.add_weighted_edges_from(
+                    {(i, j, int(flat_graph_list[counter]))})
+                counter += 1
     else:
         for i in range(len(graphlist)-1):
             for j in range(i+1, len(graphlist)):
@@ -120,15 +128,3 @@ def list_to_graph(graphlist, graphtype, calculation, dimension):
 def extract_graph(filename):
     graphlist, graphtype, calculation, dimension = file_to_list(filename)
     return list_to_graph(graphlist, graphtype, calculation, dimension)
-
-
-graphlist, graphtype, calculation, dimension = file_to_list(
-    "graphs/symmetric/gr21.tsp")
-flat_graph_list = [item for sublist in graphlist for item in sublist]
-print(flat_graph_list)
-
-grafo = extract_graph("graphs/symmetric/gr21.tsp")
-listofedges = []
-for i, j in grafo.edges:
-    listofedges.append([i, j, grafo.get_edge_data(*(i, j))['weight']])
-print(listofedges)
